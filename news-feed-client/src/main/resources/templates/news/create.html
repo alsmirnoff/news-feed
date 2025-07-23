@@ -1,0 +1,74 @@
+<!-- <!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create News</title>
+</head>
+<body>
+    <div th:replace="fragments/header :: header"></div>
+
+    <main>
+        <h1>Create New Post</h1>
+        <form th:action="@{/feed/create}" th:object="${newsRequest}" method="post">
+            <div>
+                <label>Header:</label>
+                <input type="text" th:field="*{header}" required>
+            </div>
+            <div>
+                <label>Content:</label>
+                <textarea th:field="*{body}" required></textarea>
+            </div>
+            <div>
+                <label>Date:</label>
+                <input type="date" th:field="*{date}" th:value="${#temporals.format(newsRequest.date, 'yyyy-MM-dd')}">
+            </div>
+            <button type="submit">Publish</button>
+        </form>
+    </main>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create News</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">NewsHub</h1>
+            <nav>
+                <a th:href="@{/feed}" class="btn btn-outline">Back to Feed</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="form-container">
+            <h2>Create New Post</h2>
+            <form th:action="@{/feed/create}" th:object="${newsRequest}" method="post">
+                <div class="form-group">
+                    <label for="header">Title</label>
+                    <input type="text" id="header" th:field="*{header}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="body">Content</label>
+                    <textarea id="body" th:field="*{body}" rows="6" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Publish Date</label>
+                    <input type="date" id="date" th:field="*{date}" 
+                           th:value="${#temporals.format(newsRequest.date, 'yyyy-MM-dd')}">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Publish</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

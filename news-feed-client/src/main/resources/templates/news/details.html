@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${news?.header} + ' | NewsHub'">News Details</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">NewsHub</h1>
+            <nav>
+                <a th:href="@{/feed}" class="btn btn-outline">Back to Feed</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
+        
+        <article class="news-detail" th:if="${news}">
+            <div class="news-detail__meta">
+                <span class="news-detail__date" 
+                      th:text="${#temporals.format(news.date, 'dd MMMM yyyy')}">
+                </span>
+            </div>
+            
+            <h1 class="news-detail__title" th:text="${news.header}">News Title</h1>
+            
+            <div class="news-detail__content" th:text="${news.body}">
+            </div>
+        </article>
+    </main>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

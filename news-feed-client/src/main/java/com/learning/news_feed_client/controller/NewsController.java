@@ -1,0 +1,57 @@
+package com.learning.news_feed_client.controller;
+
+import java.time.LocalDate;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import com.learning.news_feed_client.dto.NewsRequest;
+import com.learning.news_feed_client.dto.NewsResponse;
+import com.learning.news_feed_client.service.NewsFeedService;
+
+@Controller
+@RequestMapping("/feed")
+public class NewsController {
+    private final NewsFeedService newsFeedService;
+
+    public NewsController(NewsFeedService newsFeedService) {
+        this.newsFeedService = newsFeedService;
+    }
+
+    @GetMapping
+    public String getAllNews(Model model) {
+        model.addAttribute("news", newsFeedService.getAllNews().collectList().block());
+        return "news/feed";
+    }
+
+    @GetMapping("/create")
+    public String showCreateForm(Model model) {
+        model.addAttribute("newsRequest", new NewsRequest(null, null, LocalDate.now()));
+        return "news/create";
+    }
+
+    @GetMapping("{id}")
+    public String getNewsDetails(@PathVariable Long id, Model model) {
+        NewsResponse news = newsFeedService.getNewsById(id).block();
+        model.addAttribute("news", news);
+        return "news/details";
+    }
+
+    @PostMapping("/create")
+    public String createNews(@ModelAttribute NewsRequest request) {
+        newsFeedService.createNews(request).block();
+        return "redirect:/feed";
+    }
+
+    @PostMapping("/delete/{id}")
+    public String deleteNews(@PathVariable Long id) {
+        newsFeedService.deleteNews(id).block();
+        return "redirect:/feed";
+    }
+    
+}
