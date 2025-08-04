@@ -28,11 +28,11 @@ public class NewsRESTController {
     @Autowired
     private RabbitTemplate rabbitTemplate;
 
-    // @GetMapping("/feed")
-    // public List<News> showAllNews() {
-    //     List<News> allNews = newsService.getAllNews();
-    //     return allNews;
-    // }
+    @GetMapping("/feed")
+    public List<News> showAllNews() {
+        List<News> allNews = newsService.getAllNews();
+        return allNews;
+    }
 
     @RabbitListener(queues = "news.request.queue")
     public void handleNewsRequest(String correlationId) {
