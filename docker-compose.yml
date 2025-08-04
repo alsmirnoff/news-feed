@@ -1,30 +1,44 @@
 services:
-  
-  server:
-    build: ./news-feed-server
-    image: news-feed-server-image
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/test_db
-      SPRING_DATASOURCE_USERNAME: newsadmin
-      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
-    secrets:
-      - db_password
-    ports:
-      - "3333:3333"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
-  client:
-    build:
-      context: ./news-feed-client
-    image: news-feed-client-image
-    environment:
-      API_BASE_URL: http://server:3333
+  # RabbitMQ брокер
+  rabbitmq:
+    image: rabbitmq:3-management
     ports:
-      - "8080:8080"
-    depends_on:
-      - server
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      TZ: Europe/Moscow
+      RABBITMQ_DEFAULT_USER: rab
+      RABBITMQ_DEFAULT_PASS: 1234
+      RABBITMQ_DEFAULT_VHOST: vhost
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
 
-secrets:
-  db_password:
-    file: ./news-feed-server/secrets/db_password
+#   server:
+#     build: ./news-feed-server
+#     image: news-feed-server-image
+#     environment:
+#       SPRING_DATASOURCE_URL: jdbc:postgresql://host.docker.internal:5432/test_db
+#       SPRING_DATASOURCE_USERNAME: newsadmin
+#       SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
+#     secrets:
+#       - db_password
+#     ports:
+#       - "3333:3333"
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway"
+
+#   client:
+#     build:
+#       context: ./news-feed-client
+#     image: news-feed-client-image
+#     environment:
+#       API_BASE_URL: http://server:3333
+#     ports:
+#       - "8080:8080"
+#     depends_on:
+#       - server
+
+# secrets:
+#   db_password:
+#     file: ./news-feed-server/secrets/db_password
