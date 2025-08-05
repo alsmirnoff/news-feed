@@ -13,20 +13,43 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitClientConfig {
 
+    // @Bean
+    // public Queue clientResponceQueue() {
+    //     return new AnonymousQueue();
+    // }
+
+    // @Bean
+    // public Binding bindingResponce(Queue clientResponceQueue, TopicExchange exchange) {
+    //     return BindingBuilder.bind(clientResponceQueue)
+    //                         .to(exchange)
+    //                         .with("news.responce.*");
+    // }
+
+    // @Bean
+    // public MessageConverter jsonMessageConverter() {
+    //     return new Jackson2JsonMessageConverter();
+    // }
+
     @Bean
-    public Queue clientResponceQueue() {
-        return new AnonymousQueue();
+    public TopicExchange newsExchange() {
+        return new TopicExchange("news.exchange");
     }
 
     @Bean
-    public Binding bindingResponce(Queue clientResponceQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(clientResponceQueue)
-                            .to(exchange)
-                            .with("news.responce.*");
+    public Queue requestQueue() {
+        return new Queue("news.request.queue");
+    }
+
+    @Bean
+    public Binding requestBinding() {
+        return BindingBuilder.bind(requestQueue())
+                .to(newsExchange())
+                .with("news.request");
     }
 
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
+
 }
