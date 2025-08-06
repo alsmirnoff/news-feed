@@ -2,10 +2,16 @@ package com.learning.news_feed_client.service;
 
 import java.text.NumberFormat.Style;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -13,6 +19,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.learning.news_feed_client.dto.NewsDTO;
 import com.learning.news_feed_client.dto.NewsRequest;
 import com.learning.news_feed_client.dto.NewsResponse;
+import com.learning.news_feed_client.exception.NewsServiceUnavailableException;
+import com.rabbitmq.client.AMQP;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -22,7 +30,21 @@ public class NewsFeedService {
 
     private WebClient webClient;
     private RabbitTemplate rabbitTemplate;
-    private String responseQueueName;
+
+    @Value("${rabbitmq.news.exchange}")
+    private String exchangeName;
+
+    @Value("${rabbitmq.queue.ttl}")
+    private int queueTtl;
+    
+    @Value("${rabbitmq.message.timeout}")
+    private int messageResponseTimeout;
+
+    @Value("${rabbitmq.request.all.routingKey}")
+    private String requestAllRoutingKey;
+
+    @Value("${rabbitmq.request.one.routingKey}")
+    private String requestOneRoutingKey;
 
     // public NewsFeedService(WebClient webClient) {
     //     this.webClient = webClient;
@@ -45,31 +67,36 @@ public class NewsFeedService {
     // }
 
     // rabbitMQ
-    public List<NewsDTO> getAllNews() {
-        String correlationId = "req_" + System.currentTimeMillis();
-        String responseQueueName = createResponceQueue();
+    public List<NewsDTO> getAllNews() throws NewsServiceUnavailableException {
+        String correlationId = "req_" + UUID.randomUUID();
+        String responseQueueName = createTemporaryQueue(queueTtl);
+
+        System.out.println("responseQueueName: " + responseQueueName);
 
         try {
             rabbitTemplate.convertAndSend(
-                "news.request.all",
+                requestAllRoutingKey,
                 correlationId,
                 message -> {
-                    message.getMessageProperties().setReplyTo(responseQueueName);
+                    MessageProperties props = message.getMessageProperties();
+                    props.setReplyTo(responseQueueName);
+                    props.setExpiration(String.valueOf(messageResponseTimeout));
                     return message;
                 }
             );
 
             List<NewsDTO> news = rabbitTemplate.receiveAndConvert(
                 responseQueueName,
-                5000,
+                messageResponseTimeout,
                 new ParameterizedTypeReference<List<NewsDTO>>() {}
             );
 
-            System.out.println("All news from queue: " + news);
-
-            return news != null ? news : Collections.emptyList();
-        } finally {
-            deleteResponceQueue(responseQueueName);
+            if(news == null) {
+                throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
+            }
+            return news;
+        } catch (AmqpException e){
+            throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
         }
     }
 
@@ -80,29 +107,34 @@ public class NewsFeedService {
     //             .bodyToMono(NewsResponse.class);
     // }
 
-    public NewsDTO getNewsById(int id) {
-        String correlationId = "req_" + System.currentTimeMillis();
-        String responseQueueName = createResponceQueue();
+    public NewsDTO getNewsById(int id) throws NewsServiceUnavailableException {
+        //String correlationId = "req_" + UUID.randomUUID();
+        String responseQueueName = createTemporaryQueue(queueTtl);
 
         try {
             rabbitTemplate.convertAndSend(
-                "news.request.one",
-                correlationId,
+                requestOneRoutingKey,
+                id,
                 message -> {
-                    message.getMessageProperties().setReplyTo(responseQueueName);
+                    MessageProperties props = message.getMessageProperties();
+                    props.setReplyTo(responseQueueName);
+                    props.setExpiration(String.valueOf(messageResponseTimeout));
                     return message;
                 }
             );
 
             NewsDTO news = rabbitTemplate.receiveAndConvert(
                 responseQueueName,
-                5000,
+                messageResponseTimeout,
                 new ParameterizedTypeReference<NewsDTO>() {}
             );
 
-            return news != null ? news : null;
-        } finally {
-            deleteResponceQueue(responseQueueName);
+            if(news == null) {
+                throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
+            }
+            return news;
+        } catch (AmqpException e){
+            throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
         }
     }
 
@@ -121,19 +153,27 @@ public class NewsFeedService {
                 .bodyToMono(Void.class);
     }
 
-    private String createResponceQueue() {
-        return rabbitTemplate.execute(channel -> {
-           String responseQueueName = "client.response." + UUID.randomUUID().toString();
-           channel.queueDeclare(responseQueueName, false, true, true, null);
-           channel.queueBind(responseQueueName, "news.exchange", "news.response.*");
-           return responseQueueName; 
-        });
-    }
+    // private String createResponseQueue() {
+    //     return rabbitTemplate.execute(channel -> {
+    //        String responseQueueName = "client.response." + UUID.randomUUID().toString();
+    //        channel.queueDeclare(responseQueueName, false, true, true, null);
+    //        channel.queueBind(responseQueueName, "news.exchange", "news.response.*");
+    //        return responseQueueName; 
+    //     });
+    // }
 
-    private void deleteResponceQueue(String responseQueueName) {
-        rabbitTemplate.execute(channel -> {
-            channel.queueDelete(responseQueueName);
-            return null;
-        });
+    // private void deleteResponseQueue(String responseQueueName) {
+    //     rabbitTemplate.execute(channel -> {
+    //         channel.queueDelete(responseQueueName);
+    //         return null;
+    //     });
+    // }
+
+    private String createTemporaryQueue(int ttlMs) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-expires", ttlMs);
+        return rabbitTemplate.execute(channel -> 
+            channel.queueDeclare("", false, false, true, args).getQueue()
+        );
     }
 }

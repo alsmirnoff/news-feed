@@ -6,6 +6,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,11 +23,15 @@ import com.learning.news_feed.service.NewsService;
 @RequestMapping("/api")
 public class NewsController {
 
+    // @Value("${rabbitmq.news.exchange}")
+    // private String exchangeName;
+
     @Autowired
     private NewsService newsService;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
+
 
     @GetMapping("/feed")
     public List<News> showAllNews() {
@@ -35,20 +40,25 @@ public class NewsController {
     }
 
     @RabbitListener(queues = "news.request.all")
-    public void handleAllNewsRequest(String correlationId) {
+    public void handleAllNewsRequest(Message message) {
+        String replyTo = message.getMessageProperties().getReplyTo();
+        String correlationId = message.getMessageProperties().getCorrelationId();
+
         List<News> news = newsService.getAllNews();
 
-        List<NewsDTO> responce = news.stream()
+        List<NewsDTO> response = news.stream()
             .map(NewsDTO::new)
             .toList();
 
         rabbitTemplate.convertAndSend(
-            "news.exchange",
-            "news.response." + correlationId,
-            responce
+            "",
+            replyTo,
+            response,
+            m -> {
+                m.getMessageProperties().setCorrelationId(correlationId);
+                return m;
+            }
         );
-
-        System.out.println("Set all news to queue: " + responce);
     }
 
     @GetMapping("/feed/{id}")
@@ -59,15 +69,20 @@ public class NewsController {
 
     @RabbitListener(queues = "news.request.one")
     public void handleOneNewsRequest(Message message) {
+        String replyTo = message.getMessageProperties().getReplyTo();
         String correlationId = message.getMessageProperties().getCorrelationId();
         Integer newsId = Integer.valueOf(new String(message.getBody()));
 
         News news = newsService.getNews(newsId);
-        NewsDTO responce = new NewsDTO(news);
+        NewsDTO response = new NewsDTO(news);
         rabbitTemplate.convertAndSend(
-            "news.exchange",
-            "news.response." + correlationId,
-            responce
+            "",
+            replyTo,
+            response,
+            m -> {
+                m.getMessageProperties().setCorrelationId(correlationId);
+                return m;
+            }
         );
     }
 
