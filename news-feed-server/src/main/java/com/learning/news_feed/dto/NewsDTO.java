@@ -2,6 +2,8 @@ package com.learning.news_feed.dto;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.learning.news_feed.entity.News;
 
 public class NewsDTO {
@@ -10,6 +12,18 @@ public class NewsDTO {
     private String body;
     private LocalDate date;
     
+    /*@JsonCreator
+    public NewsDTO(
+        @JsonProperty("id") int id, 
+        @JsonProperty("header") String header, 
+        @JsonProperty("body") String body, 
+        @JsonProperty("date") LocalDate date) {
+        this.id = id;
+        this.header = header;
+        this.body = body;
+        this.date = date;
+    }*/
+
     public NewsDTO(News news) {
         this.id = news.getId();
         this.header = news.getHeader();

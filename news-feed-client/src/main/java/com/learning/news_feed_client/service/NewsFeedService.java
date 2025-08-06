@@ -22,7 +22,7 @@ public class NewsFeedService {
 
     private WebClient webClient;
     private RabbitTemplate rabbitTemplate;
-    private String responceQueueName;
+    private String responseQueueName;
 
     // public NewsFeedService(WebClient webClient) {
     //     this.webClient = webClient;
@@ -47,45 +47,63 @@ public class NewsFeedService {
     // rabbitMQ
     public List<NewsDTO> getAllNews() {
         String correlationId = "req_" + System.currentTimeMillis();
-        String responceQueueName = createResponceQueue();
+        String responseQueueName = createResponceQueue();
 
         try {
             rabbitTemplate.convertAndSend(
-                "news.request.queue",
+                "news.request.all",
                 correlationId,
                 message -> {
-                    message.getMessageProperties().setReplyTo(responceQueueName);
+                    message.getMessageProperties().setReplyTo(responseQueueName);
                     return message;
                 }
             );
 
             List<NewsDTO> news = rabbitTemplate.receiveAndConvert(
-                responceQueueName,
+                responseQueueName,
                 5000,
                 new ParameterizedTypeReference<List<NewsDTO>>() {}
             );
 
+            System.out.println("All news from queue: " + news);
+
             return news != null ? news : Collections.emptyList();
         } finally {
-            deleteResponceQueue(responceQueueName);
+            deleteResponceQueue(responseQueueName);
         }
     }
 
-
-    // public List<NewsDTO> getAllNews() {
-    //     String correlationId = UUID.randomUUID().toString();
-    //     List<NewsDTO> responce = (List<NewsDTO>) rabbitTemplate.convertSendAndReceive("news.exchange", "", correlationId);
-
-    //     return responce.stream()
-    //         .map(dto -> new NewsDTO(
-    //             dto.getId(), dto.getHeader(), dto.getBody(), dto.getDate())).toList();
+    // public Mono<NewsResponse> getNewsById(Long id) {
+    //     return webClient.get()
+    //             .uri("/api/feed/{id}", id)
+    //             .retrieve()
+    //             .bodyToMono(NewsResponse.class);
     // }
 
-    public Mono<NewsResponse> getNewsById(Long id) {
-        return webClient.get()
-                .uri("/api/feed/{id}", id)
-                .retrieve()
-                .bodyToMono(NewsResponse.class);
+    public NewsDTO getNewsById(int id) {
+        String correlationId = "req_" + System.currentTimeMillis();
+        String responseQueueName = createResponceQueue();
+
+        try {
+            rabbitTemplate.convertAndSend(
+                "news.request.one",
+                correlationId,
+                message -> {
+                    message.getMessageProperties().setReplyTo(responseQueueName);
+                    return message;
+                }
+            );
+
+            NewsDTO news = rabbitTemplate.receiveAndConvert(
+                responseQueueName,
+                5000,
+                new ParameterizedTypeReference<NewsDTO>() {}
+            );
+
+            return news != null ? news : null;
+        } finally {
+            deleteResponceQueue(responseQueueName);
+        }
     }
 
     public Mono<NewsResponse> createNews(NewsRequest request) {
@@ -105,16 +123,16 @@ public class NewsFeedService {
 
     private String createResponceQueue() {
         return rabbitTemplate.execute(channel -> {
-           String responceQueueName = "client.respone." + UUID.randomUUID().toString();
-           channel.queueDeclare(responceQueueName, false, true, true, null);
-           channel.queueBind(responceQueueName, "news.exchange", "news.responce.*");
-           return responceQueueName; 
+           String responseQueueName = "client.response." + UUID.randomUUID().toString();
+           channel.queueDeclare(responseQueueName, false, true, true, null);
+           channel.queueBind(responseQueueName, "news.exchange", "news.response.*");
+           return responseQueueName; 
         });
     }
 
-    private void deleteResponceQueue(String responceQueueName) {
+    private void deleteResponceQueue(String responseQueueName) {
         rabbitTemplate.execute(channel -> {
-            channel.queueDelete(responceQueueName);
+            channel.queueDelete(responseQueueName);
             return null;
         });
     }

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.learning.news_feed_client.dto.NewsDTO;
 import com.learning.news_feed_client.dto.NewsRequest;
-import com.learning.news_feed_client.dto.NewsResponse;
 import com.learning.news_feed_client.service.NewsFeedService;
 
 @Controller
@@ -41,25 +40,37 @@ public class NewsController {
         return "news/feed";
     }
 
+    // REST
+    // @GetMapping("{id}")
+    // public String getNewsDetails(@PathVariable Long id, Model model) {
+    //     NewsResponse news = newsFeedService.getNewsById(id).block();
+    //     model.addAttribute("news", news);
+    //     return "news/details";
+    // }
+
+    // rabbitMQ
+    @GetMapping("{id}")
+    public String getNewsDetails(@PathVariable int id, Model model) {
+        NewsDTO news = newsFeedService.getNewsById(id);
+        model.addAttribute("news", news);
+        return "news/details";
+    }
+
+    // REST
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("newsRequest", new NewsRequest(null, null, LocalDate.now()));
         return "news/create";
     }
 
-    @GetMapping("{id}")
-    public String getNewsDetails(@PathVariable Long id, Model model) {
-        NewsResponse news = newsFeedService.getNewsById(id).block();
-        model.addAttribute("news", news);
-        return "news/details";
-    }
-
+    // REST
     @PostMapping("/create")
     public String createNews(@ModelAttribute NewsRequest request) {
         newsFeedService.createNews(request).block();
         return "redirect:/feed";
     }
 
+    // REST
     @PostMapping("/delete/{id}")
     public String deleteNews(@PathVariable Long id) {
         newsFeedService.deleteNews(id).block();

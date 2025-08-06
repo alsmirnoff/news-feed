@@ -2,6 +2,7 @@ package com.learning.news_feed.controller;
 
 import java.util.List;
 
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,13 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.learning.news_feed.dto.NewsDTO;
-import com.learning.news_feed.dto.NewsRequest;
 import com.learning.news_feed.entity.News;
 import com.learning.news_feed.service.NewsService;
 
 @RestController
 @RequestMapping("/api")
-public class NewsRESTController {
+public class NewsController {
 
     @Autowired
     private NewsService newsService;
@@ -34,8 +34,8 @@ public class NewsRESTController {
         return allNews;
     }
 
-    @RabbitListener(queues = "news.request.queue")
-    public void handleNewsRequest(String correlationId) {
+    @RabbitListener(queues = "news.request.all")
+    public void handleAllNewsRequest(String correlationId) {
         List<News> news = newsService.getAllNews();
 
         List<NewsDTO> responce = news.stream()
@@ -44,15 +44,31 @@ public class NewsRESTController {
 
         rabbitTemplate.convertAndSend(
             "news.exchange",
-            "news.responce." + correlationId,
+            "news.response." + correlationId,
             responce
         );
+
+        System.out.println("Set all news to queue: " + responce);
     }
 
     @GetMapping("/feed/{id}")
     public News getNews(@PathVariable int id) {
         News news = newsService.getNews(id);
         return news;
+    }
+
+    @RabbitListener(queues = "news.request.one")
+    public void handleOneNewsRequest(Message message) {
+        String correlationId = message.getMessageProperties().getCorrelationId();
+        Integer newsId = Integer.valueOf(new String(message.getBody()));
+
+        News news = newsService.getNews(newsId);
+        NewsDTO responce = new NewsDTO(news);
+        rabbitTemplate.convertAndSend(
+            "news.exchange",
+            "news.response." + correlationId,
+            responce
+        );
     }
 
     @PostMapping("/create")

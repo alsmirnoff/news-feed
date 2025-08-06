@@ -1,6 +1,5 @@
 package com.learning.news_feed_client.configuration;
 
-import org.springframework.amqp.core.AnonymousQueue;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.Queue;
@@ -13,22 +12,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitClientConfig {
 
-    // @Bean
-    // public Queue clientResponceQueue() {
-    //     return new AnonymousQueue();
-    // }
+    @Bean
+    public Queue requestAllQueue() {
+        return new Queue("news.request.all");
+    }
 
-    // @Bean
-    // public Binding bindingResponce(Queue clientResponceQueue, TopicExchange exchange) {
-    //     return BindingBuilder.bind(clientResponceQueue)
-    //                         .to(exchange)
-    //                         .with("news.responce.*");
-    // }
-
-    // @Bean
-    // public MessageConverter jsonMessageConverter() {
-    //     return new Jackson2JsonMessageConverter();
-    // }
+    @Bean
+    public Queue requestOneQueue() {
+        return new Queue("news.request.one");
+    }
 
     @Bean
     public TopicExchange newsExchange() {
@@ -36,16 +28,20 @@ public class RabbitClientConfig {
     }
 
     @Bean
-    public Queue requestQueue() {
-        return new Queue("news.request.queue");
+    public Binding requestBinding(Queue requestAllQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(requestAllQueue)
+                .to(exchange)
+                .with("news.request");
     }
 
     @Bean
-    public Binding requestBinding() {
-        return BindingBuilder.bind(requestQueue())
-                .to(newsExchange())
-                .with("news.request");
+    public Binding bindingRequestOne(Queue requestOneQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(requestOneQueue)
+                            .to(exchange)
+                            .with("news.request");
     }
+
+    // нужно ли биндить очереди на клиенте, ведь это уже сделал сервер?
 
     @Bean
     public MessageConverter jsonMessageConverter() {

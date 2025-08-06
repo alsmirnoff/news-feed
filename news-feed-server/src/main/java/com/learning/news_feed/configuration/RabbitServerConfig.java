@@ -10,16 +10,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class RabbitConfig {
+public class RabbitServerConfig {
     
     @Bean
-    public Queue newsRequestQueue() {
-        return new Queue("news.request.queue", true);
+    public Queue requestAllQueue() {
+        return new Queue("news.request.all", true);
     }
 
     @Bean
-    public Queue newsResponceQueue() {
-        return new Queue("news.responce.queue", true);
+    public Queue requestOneQueue() {
+        return new Queue("news.request.one", true);
     }
 
     @Bean
@@ -28,8 +28,15 @@ public class RabbitConfig {
     }
 
     @Bean
-    public Binding bindingRequest(Queue newsRequestQueue, TopicExchange exchange) {
-        return BindingBuilder.bind(newsRequestQueue)
+    public Binding bindingRequestAll(Queue requestAllQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(requestAllQueue)
+                            .to(exchange)
+                            .with("news.request");
+    }
+
+    @Bean
+    public Binding bindingRequestOne(Queue requestOneQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(requestOneQueue)
                             .to(exchange)
                             .with("news.request");
     }
