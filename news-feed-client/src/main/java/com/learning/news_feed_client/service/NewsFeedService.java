@@ -58,7 +58,7 @@ public class NewsFeedService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    // REST
+// REST
     // public Flux<NewsResponse> getAllNewsRest() {
     //     return webClient.get()
     //                 .uri("/api/feed")
@@ -66,38 +66,47 @@ public class NewsFeedService {
     //                 .bodyToFlux(NewsResponse.class);
     // }
 
-    // rabbitMQ
-    public List<NewsDTO> getAllNews() throws NewsServiceUnavailableException {
-        String correlationId = "req_" + UUID.randomUUID();
-        String responseQueueName = createTemporaryQueue(queueTtl);
+// rabbitMQ
+    // public List<NewsDTO> getAllNews() throws NewsServiceUnavailableException {
+    //     String correlationId = "req_" + UUID.randomUUID();
+    //     String responseQueueName = createTemporaryQueue(queueTtl);
 
-        System.out.println("responseQueueName: " + responseQueueName);
+    //     System.out.println("responseQueueName: " + responseQueueName);
 
-        try {
-            rabbitTemplate.convertAndSend(
-                requestAllRoutingKey,
-                correlationId,
-                message -> {
-                    MessageProperties props = message.getMessageProperties();
-                    props.setReplyTo(responseQueueName);
-                    props.setExpiration(String.valueOf(messageResponseTimeout));
-                    return message;
-                }
-            );
+    //     try {
+    //         rabbitTemplate.convertAndSend(
+    //             requestAllRoutingKey,
+    //             correlationId,
+    //             message -> {
+    //                 MessageProperties props = message.getMessageProperties();
+    //                 props.setReplyTo(responseQueueName);
+    //                 props.setExpiration(String.valueOf(messageResponseTimeout));
+    //                 return message;
+    //             }
+    //         );
 
-            List<NewsDTO> news = rabbitTemplate.receiveAndConvert(
-                responseQueueName,
-                messageResponseTimeout,
-                new ParameterizedTypeReference<List<NewsDTO>>() {}
-            );
+    //         List<NewsDTO> news = rabbitTemplate.receiveAndConvert(
+    //             responseQueueName,
+    //             messageResponseTimeout,
+    //             new ParameterizedTypeReference<List<NewsDTO>>() {}
+    //         );
 
-            if(news == null) {
-                throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
-            }
-            return news;
-        } catch (AmqpException e){
-            throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
-        }
+    //         if(news == null) {
+    //             throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
+    //         }
+    //         return news;
+    //     } catch (AmqpException e){
+    //         throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
+    //     }
+    // }
+
+// rabbitMQ get All News
+    // очередь для Direct Reply-To устанавливается автоматически Spring AMQP
+    public List<NewsDTO> getAllNews() {
+        return rabbitTemplate.convertSendAndReceiveAsType(
+            "news.request.all", 
+            "", 
+            new ParameterizedTypeReference<List<NewsDTO>>() {});
     }
 
     // public Mono<NewsResponse> getNewsById(Long id) {
@@ -107,35 +116,44 @@ public class NewsFeedService {
     //             .bodyToMono(NewsResponse.class);
     // }
 
-    public NewsDTO getNewsById(int id) throws NewsServiceUnavailableException {
-        //String correlationId = "req_" + UUID.randomUUID();
-        String responseQueueName = createTemporaryQueue(queueTtl);
+// rabbitMQ get All News
+    // public NewsDTO getNewsById(int id) throws NewsServiceUnavailableException {
+    //     //String correlationId = "req_" + UUID.randomUUID();
+    //     String responseQueueName = createTemporaryQueue(queueTtl);
 
-        try {
-            rabbitTemplate.convertAndSend(
-                requestOneRoutingKey,
-                id,
-                message -> {
-                    MessageProperties props = message.getMessageProperties();
-                    props.setReplyTo(responseQueueName);
-                    props.setExpiration(String.valueOf(messageResponseTimeout));
-                    return message;
-                }
-            );
+    //     try {
+    //         rabbitTemplate.convertAndSend(
+    //             requestOneRoutingKey,
+    //             id,
+    //             message -> {
+    //                 MessageProperties props = message.getMessageProperties();
+    //                 props.setReplyTo(responseQueueName);
+    //                 props.setExpiration(String.valueOf(messageResponseTimeout));
+    //                 return message;
+    //             }
+    //         );
 
-            NewsDTO news = rabbitTemplate.receiveAndConvert(
-                responseQueueName,
-                messageResponseTimeout,
-                new ParameterizedTypeReference<NewsDTO>() {}
-            );
+    //         NewsDTO news = rabbitTemplate.receiveAndConvert(
+    //             responseQueueName,
+    //             messageResponseTimeout,
+    //             new ParameterizedTypeReference<NewsDTO>() {}
+    //         );
 
-            if(news == null) {
-                throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
-            }
-            return news;
-        } catch (AmqpException e){
-            throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
-        }
+    //         if(news == null) {
+    //             throw new NewsServiceUnavailableException("No response from RabbitMQ within " + messageResponseTimeout + " ms");
+    //         }
+    //         return news;
+    //     } catch (AmqpException e){
+    //         throw new RuntimeException("RabbitMQ error: " + e.getMessage(), e);
+    //     }
+    // }
+
+// rabbitMQ get All News
+    public NewsDTO getNewsById(int id) {
+        return rabbitTemplate.convertSendAndReceiveAsType(
+            "news.request.one", 
+            id,
+            new ParameterizedTypeReference<NewsDTO>() {});
     }
 
     public Mono<NewsResponse> createNews(NewsRequest request) {

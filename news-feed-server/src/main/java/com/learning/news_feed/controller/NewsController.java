@@ -39,26 +39,34 @@ public class NewsController {
         return allNews;
     }
 
+    // @RabbitListener(queues = "news.request.all")
+    // public void handleAllNewsRequest(Message message) {
+    //     String replyTo = message.getMessageProperties().getReplyTo();
+    //     String correlationId = message.getMessageProperties().getCorrelationId();
+
+    //     List<News> news = newsService.getAllNews();
+
+    //     List<NewsDTO> response = news.stream()
+    //         .map(NewsDTO::new)
+    //         .toList();
+
+    //     rabbitTemplate.convertAndSend(
+    //         "",
+    //         replyTo,
+    //         response,
+    //         m -> {
+    //             m.getMessageProperties().setCorrelationId(correlationId);
+    //             return m;
+    //         }
+    //     );
+    // }
+
     @RabbitListener(queues = "news.request.all")
-    public void handleAllNewsRequest(Message message) {
-        String replyTo = message.getMessageProperties().getReplyTo();
-        String correlationId = message.getMessageProperties().getCorrelationId();
-
-        List<News> news = newsService.getAllNews();
-
-        List<NewsDTO> response = news.stream()
+    public List<NewsDTO> handleAllNewsRequest(Message message) {
+        return newsService.getAllNews()
+            .stream()
             .map(NewsDTO::new)
             .toList();
-
-        rabbitTemplate.convertAndSend(
-            "",
-            replyTo,
-            response,
-            m -> {
-                m.getMessageProperties().setCorrelationId(correlationId);
-                return m;
-            }
-        );
     }
 
     @GetMapping("/feed/{id}")
@@ -67,23 +75,30 @@ public class NewsController {
         return news;
     }
 
-    @RabbitListener(queues = "news.request.one")
-    public void handleOneNewsRequest(Message message) {
-        String replyTo = message.getMessageProperties().getReplyTo();
-        String correlationId = message.getMessageProperties().getCorrelationId();
-        Integer newsId = Integer.valueOf(new String(message.getBody()));
+    // @RabbitListener(queues = "news.request.one")
+    // public void handleOneNewsRequest(Message message) {
+    //     String replyTo = message.getMessageProperties().getReplyTo();
+    //     String correlationId = message.getMessageProperties().getCorrelationId();
+    //     Integer newsId = Integer.valueOf(new String(message.getBody()));
 
+    //     News news = newsService.getNews(newsId);
+    //     NewsDTO response = new NewsDTO(news);
+    //     rabbitTemplate.convertAndSend(
+    //         "",
+    //         replyTo,
+    //         response,
+    //         m -> {
+    //             m.getMessageProperties().setCorrelationId(correlationId);
+    //             return m;
+    //         }
+    //     );
+    // }
+
+    @RabbitListener(queues = "news.request.one")
+    public NewsDTO handleOneNewsRequest(Message message) {
+        Integer newsId = Integer.valueOf(new String(message.getBody()));
         News news = newsService.getNews(newsId);
-        NewsDTO response = new NewsDTO(news);
-        rabbitTemplate.convertAndSend(
-            "",
-            replyTo,
-            response,
-            m -> {
-                m.getMessageProperties().setCorrelationId(correlationId);
-                return m;
-            }
-        );
+        return new NewsDTO(news);
     }
 
     @PostMapping("/create")
