@@ -107,6 +107,13 @@ public class NewsController {
         return newPost;
     }
 
+    @RabbitListener(queues = "news.create.queue")
+    public NewsDTO handleCreateNewPost(NewsDTO newsDTO) {
+        News news = convertToEntity(newsDTO);
+        News newPost = newsService.saveNews(news);
+        return new NewsDTO(newPost);
+    }
+
     @PutMapping("/feed")
     public News editPost(@RequestBody News news) {
         News newPost = newsService.saveNews(news);
@@ -117,5 +124,14 @@ public class NewsController {
     public String deleteNews(@PathVariable int id) {
         newsService.deleteNews(id);
         return "News with id = " + id + " was deleted";
+    }
+
+    private News convertToEntity(NewsDTO dto) {
+        News news = new News();
+        news.setId(dto.getId());
+        news.setHeader(dto.getHeader());
+        news.setBody(dto.getBody());
+        news.setDate(dto.getDate());
+        return news;
     }
 }

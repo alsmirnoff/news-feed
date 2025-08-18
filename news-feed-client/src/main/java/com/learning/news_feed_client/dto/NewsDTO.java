@@ -2,6 +2,8 @@ package com.learning.news_feed_client.dto;
 
 import java.time.LocalDate;
 
+import org.springframework.cglib.core.Local;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -21,6 +23,9 @@ public class NewsDTO {
         this.header = header;
         this.body = body;
         this.date = date;
+    }
+
+    public NewsDTO() {
     }
 
     public int getId() {

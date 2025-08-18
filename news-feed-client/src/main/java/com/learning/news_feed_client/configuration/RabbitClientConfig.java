@@ -23,6 +23,11 @@ public class RabbitClientConfig {
     }
 
     @Bean
+    public Queue createNewsQueue() {
+        return new Queue("news.create.queue");
+    }
+
+    @Bean
     public DirectExchange newsExchange() {
         return new DirectExchange("news.exchange");
     }
@@ -39,6 +44,13 @@ public class RabbitClientConfig {
         return BindingBuilder.bind(requestOneQueue)
                             .to(exchange)
                             .with("news.request");
+    }
+
+    @Bean
+    public Binding bindingCreateNews(Queue createNewsQueue, DirectExchange exchange) {
+        return BindingBuilder.bind(createNewsQueue)
+                            .to(exchange)
+                            .with("news.create.queue");
     }
 
     // нужно ли биндить очереди на клиенте, ведь это уже сделал сервер?

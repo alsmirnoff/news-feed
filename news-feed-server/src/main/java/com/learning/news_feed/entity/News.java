@@ -1,6 +1,7 @@
 package com.learning.news_feed.entity;
 
 import java.sql.Date;
+import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +26,7 @@ public class News {
     private String body;
 
     @Column(name = "date")
-    private Date date;
+    private LocalDate date;
 
     public News() {
     }
@@ -54,11 +55,11 @@ public class News {
         this.body = body;
     }
 
-    public Date getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

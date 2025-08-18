@@ -23,6 +23,11 @@ public class RabbitServerConfig {
     }
 
     @Bean
+    public Queue createNewsQueue() {
+        return new Queue("news.create.queue", true);
+    }
+
+    @Bean
     public DirectExchange newsExchange() {
         return new DirectExchange("news.exchange");
     }

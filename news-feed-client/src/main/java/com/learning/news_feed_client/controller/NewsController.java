@@ -25,7 +25,7 @@ public class NewsController {
         this.newsFeedService = newsFeedService;
     }
 
-    // REST
+// REST
     // @GetMapping
     // public String getAllNews(Model model) {
     //     model.addAttribute("news", newsFeedService.getAllNewsRest().collectList().block());
@@ -40,7 +40,7 @@ public class NewsController {
         return "news/feed";
     }
 
-    // REST
+// REST
     // @GetMapping("{id}")
     // public String getNewsDetails(@PathVariable Long id, Model model) {
     //     NewsResponse news = newsFeedService.getNewsById(id).block();
@@ -48,7 +48,7 @@ public class NewsController {
     //     return "news/details";
     // }
 
-    // rabbitMQ
+// rabbitMQ
     @GetMapping("{id}")
     public String getNewsDetails(@PathVariable int id, Model model) {
         NewsDTO news = newsFeedService.getNewsById(id);
@@ -56,21 +56,38 @@ public class NewsController {
         return "news/details";
     }
 
-    // REST
+// REST
+    // @GetMapping("/create")
+    // public String showCreateForm(Model model) {
+    //     model.addAttribute("newsRequest", new NewsRequest(null, null, LocalDate.now()));
+    //     return "news/create";
+    // }
+
+// rabbitMQ
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("newsRequest", new NewsRequest(null, null, LocalDate.now()));
+        NewsDTO emptyNews = new NewsDTO();
+        emptyNews.setDate(LocalDate.now());
+        model.addAttribute("newsRequest", emptyNews);
         return "news/create";
     }
 
-    // REST
+// REST
+    // @PostMapping("/create")
+    // public String createNews(@ModelAttribute NewsRequest request) {
+    //     newsFeedService.createNews(request).block();
+    //     return "redirect:/feed";
+    // }
+
+// rabbitMQ
     @PostMapping("/create")
-    public String createNews(@ModelAttribute NewsRequest request) {
-        newsFeedService.createNews(request).block();
+    public String createNews(@ModelAttribute NewsDTO request) {
+        newsFeedService.createNews(request);
         return "redirect:/feed";
     }
 
-    // REST
+
+// REST
     @PostMapping("/delete/{id}")
     public String deleteNews(@PathVariable Long id) {
         newsFeedService.deleteNews(id).block();

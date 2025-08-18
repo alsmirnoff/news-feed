@@ -28,7 +28,13 @@ public class NewsDTO {
         this.id = news.getId();
         this.header = news.getHeader();
         this.body = news.getBody();
-        this.date = news.getDate().toLocalDate();
+        this.date = news.getDate();
+    }
+
+    public NewsDTO(String header, String body, LocalDate date) {
+        this.header = header;
+        this.body = body;
+        this.date = date;
     }
 
     public int getId() {
