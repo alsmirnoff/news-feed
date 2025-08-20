@@ -2,6 +2,8 @@ package com.learning.news_feed.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -25,6 +27,8 @@ public class NewsController {
 
     // @Value("${rabbitmq.news.exchange}")
     // private String exchangeName;
+
+    private static final Logger log = LoggerFactory.getLogger(NewsController.class);
 
     @Autowired
     private NewsService newsService;
@@ -122,8 +126,11 @@ public class NewsController {
 
     @RabbitListener(queues = "news.edit.queue")
     public NewsDTO handleEditPost(NewsDTO newsDTO) {
+        // log.info("Received NewsDTO from queue: {}", newsDTO);
         News news = convertToEntity(newsDTO);
+        // log.debug("Converted to entity: {}", news);
         News newPost = newsService.saveNews(news);
+        // log.info("News saved successfully with ID: {}", newPost.getId());
         return new NewsDTO(newPost);
     }
 

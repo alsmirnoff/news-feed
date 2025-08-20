@@ -31,7 +31,8 @@
             <div class="news-detail__content" th:text="${news.body}">
             </div>
             <div class="news-detail__actions">
-                <a th:href="@{'/feed/edit/' + ${news.id}}" class="btn btn-primary">Edit This News</a>
+                <a th:href="@{'/feed/edit/' + ${news.id}}" th:method="post" class="btn btn-primary">Edit This News</a>
+            </div>
         </article>
     </main>
 

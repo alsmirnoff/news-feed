@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create News</title>
+    <title th:text="${isEdit ? 'Edit News' : 'Create News'}">News Form</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
@@ -19,8 +19,16 @@
 
     <main class="container">
         <div class="form-container">
-            <h2>Create New Post</h2>
-            <form th:action="@{/feed/create}" th:object="${newsRequest}" method="post">
+            <h2 th:text="${isEdit ? 'Edit News Post' : 'Create New Post'}">News Form</h2>
+            
+            <!-- Универсальная форма -->
+            <form th:action="${isEdit} ? @{'/feed/edit/' + ${newsRequest.id}} : @{/feed/create}" 
+                  th:object="${newsRequest}" 
+                  method="post">
+                  
+                <!-- Скрытое поле ID для редактирования -->
+                <input type="hidden" th:if="${isEdit}" th:field="*{id}">
+                
                 <div class="form-group">
                     <label for="header">Title</label>
                     <input type="text" id="header" th:field="*{header}" required>
@@ -37,7 +45,12 @@
                            th:value="${#temporals.format(newsRequest.date, 'yyyy-MM-dd')}">
                 </div>
                 
-                <button type="submit" class="btn btn-primary">Publish</button>
+                <button type="submit" class="btn btn-primary">
+                    <span th:text="${isEdit ? 'Update' : 'Publish'}">Submit</span>
+                </button>
+                
+                <!-- Кнопка отмены -->
+                <a th:href="@{/feed}" class="btn btn-outline">Cancel</a>
             </form>
         </div>
     </main>

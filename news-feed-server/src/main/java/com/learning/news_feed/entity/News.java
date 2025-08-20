@@ -63,4 +63,9 @@ public class News {
         this.date = date;
     }
 
+    @Override
+    public String toString() {
+        return "News [id=" + id + ", header=" + header + ", body=" + body + ", date=" + date + "]";
+    }
+
 }

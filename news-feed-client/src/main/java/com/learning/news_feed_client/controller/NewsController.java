@@ -3,6 +3,8 @@ package com.learning.news_feed_client.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +22,8 @@ import com.learning.news_feed_client.service.NewsFeedService;
 @Controller
 @RequestMapping("/feed")
 public class NewsController {
+
+    private static final Logger log = LoggerFactory.getLogger(NewsController.class);
     
     private final NewsFeedService newsFeedService;
 
@@ -70,8 +74,9 @@ public class NewsController {
     public String showCreateForm(Model model) {
         NewsDTO emptyNews = new NewsDTO();
         emptyNews.setDate(LocalDate.now());
+        model.addAttribute("isEdit", false);
         model.addAttribute("newsRequest", emptyNews);
-        return "news/create";
+        return "news/form";
     }
 
 // REST create
@@ -91,14 +96,17 @@ public class NewsController {
 // rabbitMQ edit
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable int id, Model model) {
+        // log.info("Edit id from showForm: {}", id);
         NewsDTO newsDTO = newsFeedService.getNewsById(id);
+        model.addAttribute("isEdit", true);
         model.addAttribute("newsRequest", newsDTO);
-        return "news/create";
+        return "news/form";
     }
 
 // rabbitMQ edit
-    @PutMapping("/edit/{id}")
+    @PostMapping("/edit/{id}")
     public String editNews(@PathVariable int id, @ModelAttribute NewsDTO request) {
+        // log.info("Edit id from editNews: {}", id);
         request.setId(id);
         newsFeedService.editNews(request);
         return "redirect:/feed";

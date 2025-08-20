@@ -68,5 +68,10 @@ public class NewsDTO {
     public void setDate(LocalDate date) {
         this.date = date;
     }
+
+    @Override
+    public String toString() {
+        return "NewsDTO [id=" + id + ", header=" + header + ", body=" + body + ", date=" + date + "]";
+    }
     
 }
