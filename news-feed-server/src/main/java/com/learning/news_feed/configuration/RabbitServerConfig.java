@@ -14,12 +14,12 @@ public class RabbitServerConfig {
     
     @Bean
     public Queue requestAllQueue() {
-        return new Queue("news.request.all", true);
+        return new Queue("news.request.all.queue", true);
     }
 
     @Bean
     public Queue requestOneQueue() {
-        return new Queue("news.request.one", true);
+        return new Queue("news.request.one.queue", true);
     }
 
     @Bean
@@ -28,23 +28,33 @@ public class RabbitServerConfig {
     }
 
     @Bean
+    public Queue editNewsQueue() {
+        return new Queue("news.edit.queue", true);
+    }
+
+    @Bean
+    public Queue deleteNewsQueue() {
+        return new Queue("news.delete.queue", true);
+    }
+
+    @Bean
     public DirectExchange newsExchange() {
         return new DirectExchange("news.exchange");
     }
 
-    @Bean
-    public Binding bindingRequestAll(Queue requestAllQueue, DirectExchange exchange) {
-        return BindingBuilder.bind(requestAllQueue)
-                            .to(exchange)
-                            .with("news.request");
-    }
+    // @Bean
+    // public Binding bindingRequestAll(Queue requestAllQueue, DirectExchange exchange) {
+    //     return BindingBuilder.bind(requestAllQueue)
+    //                         .to(exchange)
+    //                         .with("news.request");
+    // }
 
-    @Bean
-    public Binding bindingRequestOne(Queue requestOneQueue, DirectExchange exchange) {
-        return BindingBuilder.bind(requestOneQueue)
-                            .to(exchange)
-                            .with("news.request");
-    }
+    // @Bean
+    // public Binding bindingRequestOne(Queue requestOneQueue, DirectExchange exchange) {
+    //     return BindingBuilder.bind(requestOneQueue)
+    //                         .to(exchange)
+    //                         .with("news.request");
+    // }
 
     @Bean
     public MessageConverter jsonMessageConverter() {

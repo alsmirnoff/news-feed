@@ -12,7 +12,7 @@ public class NewsDTO {
     private String body;
     private LocalDate date;
     
-    /*@JsonCreator
+    @JsonCreator
     public NewsDTO(
         @JsonProperty("id") int id, 
         @JsonProperty("header") String header, 
@@ -22,7 +22,7 @@ public class NewsDTO {
         this.header = header;
         this.body = body;
         this.date = date;
-    }*/
+    }
 
     public NewsDTO(News news) {
         this.id = news.getId();

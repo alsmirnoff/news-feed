@@ -11,6 +11,7 @@
             <h1 class="logo">NewsHub</h1>
             <nav>
                 <a th:href="@{/feed}" class="btn btn-outline">Back to Feed</a>
+                <!-- <a th:href="@{'/news/edit/' + ${news.id}}" class="btn btn-primary">Edit News</a> -->
             </nav>
         </div>
     </header>
@@ -29,6 +30,8 @@
             
             <div class="news-detail__content" th:text="${news.body}">
             </div>
+            <div class="news-detail__actions">
+                <a th:href="@{'/feed/edit/' + ${news.id}}" class="btn btn-primary">Edit This News</a>
         </article>
     </main>
 

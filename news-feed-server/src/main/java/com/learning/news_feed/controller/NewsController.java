@@ -61,7 +61,7 @@ public class NewsController {
     //     );
     // }
 
-    @RabbitListener(queues = "news.request.all")
+    @RabbitListener(queues = "news.request.all.queue")
     public List<NewsDTO> handleAllNewsRequest(Message message) {
         return newsService.getAllNews()
             .stream()
@@ -94,7 +94,7 @@ public class NewsController {
     //     );
     // }
 
-    @RabbitListener(queues = "news.request.one")
+    @RabbitListener(queues = "news.request.one.queue")
     public NewsDTO handleOneNewsRequest(Message message) {
         Integer newsId = Integer.valueOf(new String(message.getBody()));
         News news = newsService.getNews(newsId);
@@ -114,16 +114,29 @@ public class NewsController {
         return new NewsDTO(newPost);
     }
 
-    @PutMapping("/feed")
+    @PutMapping("/edit/{id}")
     public News editPost(@RequestBody News news) {
         News newPost = newsService.saveNews(news);
         return newPost;
+    }
+
+    @RabbitListener(queues = "news.edit.queue")
+    public NewsDTO handleEditPost(NewsDTO newsDTO) {
+        News news = convertToEntity(newsDTO);
+        News newPost = newsService.saveNews(news);
+        return new NewsDTO(newPost);
     }
 
     @PostMapping("/delete/{id}")
     public String deleteNews(@PathVariable int id) {
         newsService.deleteNews(id);
         return "News with id = " + id + " was deleted";
+    }
+
+    @RabbitListener(queues = "news.delete.queue")
+    public void handleDeleteNews(Message message) {
+        Integer newsId = Integer.valueOf(new String(message.getBody()));
+        newsService.deleteNews(newsId);
     }
 
     private News convertToEntity(NewsDTO dto) {

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.learning.news_feed_client.dto.NewsDTO;
@@ -56,14 +58,14 @@ public class NewsController {
         return "news/details";
     }
 
-// REST
+// REST create
     // @GetMapping("/create")
     // public String showCreateForm(Model model) {
     //     model.addAttribute("newsRequest", new NewsRequest(null, null, LocalDate.now()));
     //     return "news/create";
     // }
 
-// rabbitMQ
+// rabbitMQ create
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         NewsDTO emptyNews = new NewsDTO();
@@ -72,25 +74,47 @@ public class NewsController {
         return "news/create";
     }
 
-// REST
+// REST create
     // @PostMapping("/create")
     // public String createNews(@ModelAttribute NewsRequest request) {
     //     newsFeedService.createNews(request).block();
     //     return "redirect:/feed";
     // }
 
-// rabbitMQ
+// rabbitMQ create
     @PostMapping("/create")
     public String createNews(@ModelAttribute NewsDTO request) {
         newsFeedService.createNews(request);
         return "redirect:/feed";
     }
 
+// rabbitMQ edit
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable int id, Model model) {
+        NewsDTO newsDTO = newsFeedService.getNewsById(id);
+        model.addAttribute("newsRequest", newsDTO);
+        return "news/create";
+    }
+
+// rabbitMQ edit
+    @PutMapping("/edit/{id}")
+    public String editNews(@PathVariable int id, @ModelAttribute NewsDTO request) {
+        request.setId(id);
+        newsFeedService.editNews(request);
+        return "redirect:/feed";
+    }
 
 // REST
+    // @PostMapping("/delete/{id}")
+    // public String deleteNews(@PathVariable Long id) {
+    //     newsFeedService.deleteNews(id).block();
+    //     return "redirect:/feed";
+    // }
+
+// rabbitMQ
     @PostMapping("/delete/{id}")
-    public String deleteNews(@PathVariable Long id) {
-        newsFeedService.deleteNews(id).block();
+    public String deleteNews(@PathVariable int id) {
+        newsFeedService.deleteNews(id);
         return "redirect:/feed";
     }
     

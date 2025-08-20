@@ -51,7 +51,7 @@ public class NewsFeedService {
     // очередь для Direct Reply-To устанавливается автоматически Spring AMQP
     public List<NewsDTO> getAllNews() {
         return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.request.all", 
+            "news.request.all.queue", 
             "", 
             new ParameterizedTypeReference<List<NewsDTO>>() {});
     }
@@ -68,7 +68,7 @@ public class NewsFeedService {
 // rabbitMQ get one
     public NewsDTO getNewsById(int id) {
         return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.request.one", 
+            "news.request.one.queue", 
             id,
             new ParameterizedTypeReference<NewsDTO>() {});
     }
@@ -89,13 +89,28 @@ public class NewsFeedService {
             request,
             new ParameterizedTypeReference<NewsDTO>() {});
    }
-    
+
+// rabbitMQ edit
+   public NewsDTO editNews(NewsDTO request) {
+        return rabbitTemplate.convertSendAndReceiveAsType(
+            "news.edit.queue",
+            request,
+            new ParameterizedTypeReference<NewsDTO>() {});
+   }
+
 // REST delete
     public Mono<Void> deleteNews(Long id) {
         return webClient.post()
                 .uri("/api/delete/{id}", id)
                 .retrieve()
                 .bodyToMono(Void.class);
+    }
+
+// rabbitMQ delete
+    public void deleteNews(int id) {
+        rabbitTemplate.convertSendAndReceive(
+            "news.delete.queue", 
+            id);
     }
 
 }

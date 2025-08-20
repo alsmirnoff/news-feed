@@ -69,6 +69,8 @@ body {
     font-weight: 500;
     transition: all 0.3s ease;
     border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateY(0);
 }
 
 .btn-primary {
@@ -88,6 +90,15 @@ body {
 .btn-outline:hover {
     background-color: var(--primary-color);
     color: var(--white);
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
 }
 
 /* News feed styles */
@@ -263,4 +274,22 @@ body {
 .delete-btn:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.5);
+}
+
+/* Стили для навигационных кнопок в header */
+.nav-buttons {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+}
+
+/* Стили для блока с кнопками действий под статьей */
+.news-detail__actions {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--light-gray);
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
