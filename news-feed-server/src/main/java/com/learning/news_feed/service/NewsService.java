@@ -2,14 +2,14 @@ package com.learning.news_feed.service;
 
 import java.util.List;
 
-import com.learning.news_feed.entity.News;
+import com.learning.news_feed.dto.NewsDTO;
 
 public interface NewsService {
-    public List<News> getAllNews();
+    public List<NewsDTO> getAllNews();
 
-    public News saveNews(News news);
+    public NewsDTO saveNews(NewsDTO newsDTO);
 
-    public News getNews(int id);
+    public NewsDTO getNews(Long id);
 
-    public void deleteNews(int id);
+    public void deleteNews(Long id);
 }

@@ -4,6 +4,7 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
@@ -13,34 +14,14 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitServerConfig {
     
     @Bean
-    public Queue requestAllQueue() {
-        return new Queue("news.request.all.queue", true);
+    public Queue newsCrudQueue() {
+        return new Queue("news.crud.queue", true);
     }
 
-    @Bean
-    public Queue requestOneQueue() {
-        return new Queue("news.request.one.queue", true);
-    }
-
-    @Bean
-    public Queue createNewsQueue() {
-        return new Queue("news.create.queue", true);
-    }
-
-    @Bean
-    public Queue editNewsQueue() {
-        return new Queue("news.edit.queue", true);
-    }
-
-    @Bean
-    public Queue deleteNewsQueue() {
-        return new Queue("news.delete.queue", true);
-    }
-
-    @Bean
-    public DirectExchange newsExchange() {
-        return new DirectExchange("news.exchange");
-    }
+    // @Bean
+    // public TopicExchange newsExchange() {
+    //     return new TopicExchange("news.topic.exchange");
+    // }
 
     // @Bean
     // public Binding bindingRequestAll(Queue requestAllQueue, DirectExchange exchange) {

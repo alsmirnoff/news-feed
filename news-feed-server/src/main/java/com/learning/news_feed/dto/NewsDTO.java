@@ -24,13 +24,6 @@ public class NewsDTO {
         this.date = date;
     }
 
-    public NewsDTO(News news) {
-        this.id = news.getId();
-        this.header = news.getHeader();
-        this.body = news.getBody();
-        this.date = news.getDate();
-    }
-
     public NewsDTO(String header, String body, LocalDate date) {
         this.header = header;
         this.body = body;
