@@ -1,6 +1,5 @@
 package com.learning.news_feed.entity;
 
-import java.sql.Date;
 import java.time.LocalDate;
 
 import jakarta.persistence.Column;
@@ -17,7 +16,7 @@ public class News {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private int id;
+    private Long id;
 
     @Column(name = "header")
     private String header;
@@ -31,11 +30,11 @@ public class News {
     public News() {
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

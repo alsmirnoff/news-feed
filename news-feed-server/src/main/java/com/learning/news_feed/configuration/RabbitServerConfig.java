@@ -14,8 +14,48 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitServerConfig {
     
     @Bean
-    public Queue newsCrudQueue() {
-        return new Queue("news.crud.queue", true);
+    public TopicExchange newsExchange() {
+        return new TopicExchange("news.exchange");
+    }
+
+    @Bean
+    public Queue newsQueue() {
+        return new Queue("news.queue");
+    }
+
+    @Bean
+    public Binding createBinding() {
+        return BindingBuilder.bind(newsQueue())
+                .to(newsExchange())
+                .with("news.create");
+    }
+
+    @Bean
+    public Binding getBinding() {
+        return BindingBuilder.bind(newsQueue())
+                .to(newsExchange())
+                .with("news.get");
+    }
+
+    @Bean
+    public Binding getAllBinding() {
+        return BindingBuilder.bind(newsQueue())
+                .to(newsExchange())
+                .with("news.get.all");
+    }
+
+    @Bean
+    public Binding updateBinding() {
+        return BindingBuilder.bind(newsQueue())
+                .to(newsExchange())
+                .with("news.update");
+    }
+
+    @Bean
+    public Binding deleteBinding() {
+        return BindingBuilder.bind(newsQueue())
+                .to(newsExchange())
+                .with("news.delete");
     }
 
     // @Bean

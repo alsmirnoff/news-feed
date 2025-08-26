@@ -8,14 +8,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class NewsDTO {
-    private int id;
+    private Long id;
     private String header;
     private String body;
     private LocalDate date;
     
     @JsonCreator
     public NewsDTO(
-        @JsonProperty("id") int id, 
+        @JsonProperty("id") Long id, 
         @JsonProperty("header") String header, 
         @JsonProperty("body") String body, 
         @JsonProperty("date") LocalDate date) {
@@ -28,11 +28,11 @@ public class NewsDTO {
     public NewsDTO() {
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
