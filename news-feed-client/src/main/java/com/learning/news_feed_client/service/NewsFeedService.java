@@ -163,6 +163,7 @@ public class NewsFeedService {
     }
 
     private <T> CompletableFuture<T> sendRequest(String routingKey, Object payload, ParameterizedTypeReference<T> responseType) {
+        System.out.println("Sending payload: " + payload + " with routingKey: " + routingKey);
         return CompletableFuture.supplyAsync(() -> 
             rabbitTemplate.convertSendAndReceiveAsType("news.exchange", routingKey, payload, responseType)
         );
