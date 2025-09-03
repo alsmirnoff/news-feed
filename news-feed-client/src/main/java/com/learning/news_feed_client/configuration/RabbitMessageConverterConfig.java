@@ -12,18 +12,18 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class RabbitMessageConverterConfig {
-    public static MessageConverter createSafeJsonMessageConverter() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    // public static MessageConverter createSafeJsonMessageConverter() {
+    //     ObjectMapper objectMapper = new ObjectMapper();
+    //     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    //     objectMapper.registerModule(new JavaTimeModule());
+    //     objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
+    //     Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
    
-        converter.setTypePrecedence(TypePrecedence.INFERRED);
-        converter.setTypeIdPropertyName("");
-        converter.setTypeIdMappings(Collections.emptyMap());
+    //     converter.setTypePrecedence(TypePrecedence.INFERRED);
+    //     converter.setTypeIdPropertyName("");
+    //     converter.setTypeIdMappings(Collections.emptyMap());
         
-        return converter;
-    }
+    //     return converter;
+    // }
 }

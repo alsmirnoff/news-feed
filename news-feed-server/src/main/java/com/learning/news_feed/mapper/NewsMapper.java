@@ -23,6 +23,7 @@ public class NewsMapper {
         if (newsDTO == null) return null;
         
         News news = new News();
+        news.setId(newsDTO.getId());
         news.setHeader(newsDTO.getHeader());
         news.setBody(newsDTO.getBody());
         news.setDate(newsDTO.getDate());

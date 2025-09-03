@@ -12,6 +12,7 @@ import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFacto
 import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.DefaultClassMapper;
 import org.springframework.amqp.support.converter.Jackson2JavaTypeMapper.TypePrecedence;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -98,43 +99,19 @@ public class RabbitServerConfig {
     //                         .with("news.request");
     // }
 
-    // @Bean
-    // public MessageConverter jsonMessageConverter() {
-    //     ObjectMapper objectMapper = new ObjectMapper();
-    //     objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    //     objectMapper.registerModule(new JavaTimeModule());
-    //     objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        
-    //     Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
-    //     converter.setTypePrecedence(TypePrecedence.INFERRED);
-    //     return converter;
-    // }
-
-    // @Bean
-    // public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
-    //     RabbitTemplate template = new RabbitTemplate(connectionFactory);
-    //     template.setMessageConverter(jsonMessageConverter);
-    //     return template;
-    // }
-
-    // @Bean
-    // public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
-    //     SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-    //     factory.setConnectionFactory(connectionFactory);
-    //     factory.setMessageConverter(jsonMessageConverter);
-    //     return factory;
-    // }
+    @Bean
+    public Jackson2JsonMessageConverter jsonMessageConverter() {
+        Jackson2JsonMessageConverter jsonConverter = new Jackson2JsonMessageConverter();
+        jsonConverter.setClassMapper(classMapper());
+        return jsonConverter;
+    }
 
     @Bean
-    public MessageConverter jsonMessageConverter() {
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
-        
+    public DefaultClassMapper classMapper() {
+        DefaultClassMapper classMapper = new DefaultClassMapper();
         Map<String, Class<?>> idClassMapping = new HashMap<>();
-        idClassMapping.put("news.dto", NewsDTO.class);
-        
-        converter.setTypeIdMappings(idClassMapping);
-        converter.setTypePrecedence(TypePrecedence.TYPE_ID);
-        
-        return converter;
+        idClassMapping.put("com.learning.news_feed_client.dto.NewsDTO", NewsDTO.class);
+        classMapper.setIdClassMapping(idClassMapping);
+        return classMapper;
     }
 }
