@@ -1,7 +1,9 @@
 package com.learning.news_feed_client.controller;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +41,12 @@ public class NewsController {
     // }
 
     // rabbitMQ
-    @GetMapping
-    public String getAllNews(Model model) {
-        List<NewsDTO> news = newsFeedService.getAllNews();
-        model.addAttribute("news", news);
-        return "news/feed";
-    }
+    // @GetMapping
+    // public String getAllNews(Model model) {
+    //     List<NewsDTO> news = newsFeedService.getAllNews();
+    //     model.addAttribute("news", news);
+    //     return "news/feed";
+    // }
 
 // REST
     // @GetMapping("{id}")
@@ -55,12 +57,12 @@ public class NewsController {
     // }
 
 // rabbitMQ
-    @GetMapping("{id}")
-    public String getNewsDetails(@PathVariable int id, Model model) {
-        NewsDTO news = newsFeedService.getNewsById(id);
-        model.addAttribute("news", news);
-        return "news/details";
-    }
+    // @GetMapping("{id}")
+    // public String getNewsDetails(@PathVariable int id, Model model) {
+    //     NewsDTO news = newsFeedService.getNewsById(id);
+    //     model.addAttribute("news", news);
+    //     return "news/details";
+    // }
 
 // REST create
     // @GetMapping("/create")
@@ -70,14 +72,14 @@ public class NewsController {
     // }
 
 // rabbitMQ create
-    @GetMapping("/create")
-    public String showCreateForm(Model model) {
-        NewsDTO emptyNews = new NewsDTO();
-        emptyNews.setDate(LocalDate.now());
-        model.addAttribute("isEdit", false);
-        model.addAttribute("newsRequest", emptyNews);
-        return "news/form";
-    }
+    // @GetMapping("/create")
+    // public String showCreateForm(Model model) {
+    //     NewsDTO emptyNews = new NewsDTO();
+    //     emptyNews.setDate(LocalDate.now());
+    //     model.addAttribute("isEdit", false);
+    //     model.addAttribute("newsRequest", emptyNews);
+    //     return "news/form";
+    // }
 
 // REST create
     // @PostMapping("/create")
@@ -87,30 +89,30 @@ public class NewsController {
     // }
 
 // rabbitMQ create
-    @PostMapping("/create")
-    public String createNews(@ModelAttribute NewsDTO request) {
-        newsFeedService.createNews(request);
-        return "redirect:/feed";
-    }
+    // @PostMapping("/create")
+    // public String createNews(@ModelAttribute NewsDTO request) {
+    //     newsFeedService.createNews(request);
+    //     return "redirect:/feed";
+    // }
 
 // rabbitMQ edit
-    @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable int id, Model model) {
-        // log.info("Edit id from showForm: {}", id);
-        NewsDTO newsDTO = newsFeedService.getNewsById(id);
-        model.addAttribute("isEdit", true);
-        model.addAttribute("newsRequest", newsDTO);
-        return "news/form";
-    }
+    // @GetMapping("/edit/{id}")
+    // public String showEditForm(@PathVariable int id, Model model) {
+    //     // log.info("Edit id from showForm: {}", id);
+    //     NewsDTO newsDTO = newsFeedService.getNewsById(id);
+    //     model.addAttribute("isEdit", true);
+    //     model.addAttribute("newsRequest", newsDTO);
+    //     return "news/form";
+    // }
 
 // rabbitMQ edit
-    @PostMapping("/edit/{id}")
-    public String editNews(@PathVariable int id, @ModelAttribute NewsDTO request) {
-        // log.info("Edit id from editNews: {}", id);
-        request.setId(id);
-        newsFeedService.editNews(request);
-        return "redirect:/feed";
-    }
+    // @PostMapping("/edit/{id}")
+    // public String editNews(@PathVariable int id, @ModelAttribute NewsDTO request) {
+    //     // log.info("Edit id from editNews: {}", id);
+    //     request.setId(id);
+    //     newsFeedService.editNews(request);
+    //     return "redirect:/feed";
+    // }
 
 // REST
     // @PostMapping("/delete/{id}")
@@ -120,10 +122,90 @@ public class NewsController {
     // }
 
 // rabbitMQ
+    // @PostMapping("/delete/{id}")
+    // public String deleteNews(@PathVariable int id) {
+    //     newsFeedService.deleteNews(id);
+    //     return "redirect:/feed";
+    // }
+
+
+// rabbitMQ async
+    @GetMapping
+    public CompletableFuture<String> getAllNews(Model model) {
+        return newsFeedService.getAllNews()
+            .thenApply(news -> {
+                model.addAttribute("news", news);
+                return "news/feed";
+            })
+            .exceptionally(e -> {
+                model.addAttribute("error", "Failed to load news: " + e.getMessage());
+                model.addAttribute("news", Collections.emptyList());
+                return "news/feed";
+            });
+    }
+    
+    @GetMapping("{id}")
+    public CompletableFuture<String> getNewsDetails(@PathVariable Long id, Model model) {
+        return newsFeedService.getNews(id)
+            .thenApply(news -> {
+                model.addAttribute("news", news);
+                return "news/details";
+            })
+            .exceptionally(e -> {
+                model.addAttribute("error", "Failed to load news: " + e.getMessage());
+                return "redirect:/news";
+            });
+    }
+
+    @GetMapping("/create")
+    public String showCreateForm(Model model) {
+        NewsDTO emptyNews = new NewsDTO();
+        emptyNews.setDate(LocalDate.now());
+        model.addAttribute("isEdit", false);
+        model.addAttribute("newsRequest", emptyNews);
+        return "news/form";
+    }
+
+    @PostMapping("/create")
+    public CompletableFuture<String> createNews(@ModelAttribute NewsDTO request) {
+        return newsFeedService.createNews(request)
+            .thenApply(createdNews -> "redirect:/feed")
+            .exceptionally(e -> {
+                return "redirect:/news/create?error=true";
+            });
+    }
+
+    @GetMapping("/edit/{id}")
+    public CompletableFuture<String> showEditForm(@PathVariable Long id, Model model) {
+        return newsFeedService.getNews(id)
+            .thenApply(newsDTO -> {
+                model.addAttribute("isEdit", true);
+                model.addAttribute("newsRequest", newsDTO);
+                return "news/form";
+            })
+            .exceptionally(e -> {
+                model.addAttribute("error", "Failed to load news for editing: " + e.getMessage());
+                return "redirect:/news";
+            });
+    }
+
+    @PostMapping("/edit/{id}")
+    public CompletableFuture<String> updateNews(@PathVariable Long id, @ModelAttribute NewsDTO request) {
+        request.setId(id);
+        return newsFeedService.updateNews(request)
+            .thenApply(updatedNews -> "redirect:/feed")
+            .exceptionally(e -> {
+                return "redirect:/news/edit/" + id + "?error=true";
+            });
+    }
+
     @PostMapping("/delete/{id}")
-    public String deleteNews(@PathVariable int id) {
-        newsFeedService.deleteNews(id);
-        return "redirect:/feed";
+    public CompletableFuture<String> deleteNews(@PathVariable Long id) {
+        return CompletableFuture.runAsync(() -> newsFeedService.deleteNews(id))
+            .thenApply(v -> "redirect:/feed")
+            .exceptionally(e -> {
+                return "redirect:/feed?deleteError=true";
+            });
     }
     
 }

@@ -4,17 +4,16 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.learning.news_feed.entity.News;
 
 public class NewsDTO {
-    private int id;
+    private Long id;
     private String header;
     private String body;
     private LocalDate date;
     
     @JsonCreator
     public NewsDTO(
-        @JsonProperty("id") int id, 
+        @JsonProperty("id") Long id, 
         @JsonProperty("header") String header, 
         @JsonProperty("body") String body, 
         @JsonProperty("date") LocalDate date) {
@@ -24,24 +23,17 @@ public class NewsDTO {
         this.date = date;
     }
 
-    public NewsDTO(News news) {
-        this.id = news.getId();
-        this.header = news.getHeader();
-        this.body = news.getBody();
-        this.date = news.getDate();
-    }
-
     public NewsDTO(String header, String body, LocalDate date) {
         this.header = header;
         this.body = body;
         this.date = date;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -6,10 +6,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
 import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -28,7 +31,7 @@ import reactor.core.publisher.Mono;
 @Service
 public class NewsFeedService {
 
-    private WebClient webClient;
+    // private WebClient webClient;
     private RabbitTemplate rabbitTemplate;
 
     public NewsFeedService(RabbitTemplate rabbitTemplate){
@@ -47,15 +50,6 @@ public class NewsFeedService {
     //                 .bodyToFlux(NewsResponse.class);
     // }
 
-// rabbitMQ get all
-    // очередь для Direct Reply-To устанавливается автоматически Spring AMQP
-    public List<NewsDTO> getAllNews() {
-        return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.request.all.queue", 
-            "", 
-            new ParameterizedTypeReference<List<NewsDTO>>() {});
-    }
-
 // REST get one
     // public Mono<NewsResponse> getNewsById(Long id) {
     //     return webClient.get()
@@ -63,15 +57,6 @@ public class NewsFeedService {
     //             .retrieve()
     //             .bodyToMono(NewsResponse.class);
     // }
-
-
-// rabbitMQ get one
-    public NewsDTO getNewsById(int id) {
-        return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.request.one.queue", 
-            id,
-            new ParameterizedTypeReference<NewsDTO>() {});
-    }
 
 // REST create
     // public Mono<NewsResponse> createNews(NewsRequest request) {
@@ -82,35 +67,106 @@ public class NewsFeedService {
     //             .bodyToMono(NewsResponse.class);
     // }
 
-// rabbitMQ create
-   public NewsDTO createNews(NewsDTO request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.create.queue",
-            request,
-            new ParameterizedTypeReference<NewsDTO>() {});
-   }
-
-// rabbitMQ edit
-   public NewsDTO editNews(NewsDTO request) {
-        return rabbitTemplate.convertSendAndReceiveAsType(
-            "news.edit.queue",
-            request,
-            new ParameterizedTypeReference<NewsDTO>() {});
-   }
-
 // REST delete
-    public Mono<Void> deleteNews(Long id) {
-        return webClient.post()
-                .uri("/api/delete/{id}", id)
-                .retrieve()
-                .bodyToMono(Void.class);
+    // public Mono<Void> deleteNews(Long id) {
+    //     return webClient.post()
+    //             .uri("/api/delete/{id}", id)
+    //             .retrieve()
+    //             .bodyToMono(Void.class);
+    // }
+
+// ================================================================
+
+// rabbitMQ SYNC RPC
+
+// rabbitMQ get all
+    // очередь для Direct Reply-To устанавливается автоматически Spring AMQP
+    // public List<NewsDTO> getAllNews() {
+    //     return rabbitTemplate.convertSendAndReceiveAsType(
+    //         "news.request.all.queue", 
+    //         "", 
+    //         new ParameterizedTypeReference<List<NewsDTO>>() {});
+    // }
+
+// rabbitMQ get one
+//     public NewsDTO getNewsById(int id) {
+//         return rabbitTemplate.convertSendAndReceiveAsType(
+//             "news.request.one.queue", 
+//             id,
+//             new ParameterizedTypeReference<NewsDTO>() {});
+//     }
+
+// // rabbitMQ create
+//    public NewsDTO createNews(NewsDTO request) {
+//         return rabbitTemplate.convertSendAndReceiveAsType(
+//             "news.create.queue",
+//             request,
+//             new ParameterizedTypeReference<NewsDTO>() {});
+//    }
+
+// // rabbitMQ edit
+//    public NewsDTO editNews(NewsDTO request) {
+//         return rabbitTemplate.convertSendAndReceiveAsType(
+//             "news.edit.queue",
+//             request,
+//             new ParameterizedTypeReference<NewsDTO>() {});
+//    }
+
+// // rabbitMQ delete
+//     public void deleteNews(int id) {
+//         rabbitTemplate.convertSendAndReceive(
+//             "news.delete.queue", 
+//             id);
+//     }
+
+// ================================================================
+
+// rabbitMQ ASYNC RPC
+
+// rabbitMQ get all async
+    // public List<NewsDTO> getAllNews() {
+    //     return rabbitTemplate.convertSendAndReceiveAsType(
+    //         "news.request.all.queue", 
+    //         "", 
+    //         new ParameterizedTypeReference<List<NewsDTO>>() {});
+    // }
+
+    // public CompletableFuture<List<NewsDTO>> getAllNewsAsync(){
+    //     return CompletableFuture.supplyAsync(() -> rabbitTemplate.convertSendAndReceiveAsType(
+    //             "news.requests.exchange",
+    //             "",
+    //             new ParameterizedTypeReference<List<NewsDTO>>() {}
+    //         )
+    //     );
+    // }
+
+    public CompletableFuture<NewsDTO> createNews(NewsDTO news) {
+        return sendRequest("news.create", news, new ParameterizedTypeReference<NewsDTO>() {});
     }
 
-// rabbitMQ delete
-    public void deleteNews(int id) {
-        rabbitTemplate.convertSendAndReceive(
-            "news.delete.queue", 
-            id);
+    public CompletableFuture<NewsDTO> updateNews(NewsDTO news) {
+        return sendRequest("news.update", news, new ParameterizedTypeReference<NewsDTO>() {});
+    }
+
+    public CompletableFuture<NewsDTO> getNews(Long id) {
+        return sendRequest("news.get", id, new ParameterizedTypeReference<NewsDTO>() {});
+    }
+    
+    public CompletableFuture<List<NewsDTO>> getAllNews() {
+        return sendRequest("news.get.all", "", new ParameterizedTypeReference<List<NewsDTO>>() {});
+    }
+    
+    public CompletableFuture<Void> deleteNews(Long id) {
+        return CompletableFuture.runAsync(() -> {
+            rabbitTemplate.convertAndSend("news.exchange", "news.delete", id);
+        });
+    }
+
+    private <T> CompletableFuture<T> sendRequest(String routingKey, Object payload, ParameterizedTypeReference<T> responseType) {
+        System.out.println("Sending payload: " + payload + " with routingKey: " + routingKey);
+        return CompletableFuture.supplyAsync(() -> 
+            rabbitTemplate.convertSendAndReceiveAsType("news.exchange", routingKey, payload, responseType)
+        );
     }
 
 }
